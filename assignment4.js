@@ -49,7 +49,19 @@ function Light()
     this.ambient  = vec4(0.2, 0.2, 0.2, 1.0);
     this.diffuse  = vec4(1.0, 1.0, 1.0, 1.0);
     this.specular = vec4(1.0, 1.0, 1.0, 1.0);
-    this.pos = vec4(-2000.0, 1000.0, -500.0, 1.0);
+    this.pos = [1000.0, 0.0, 0.0];
+    this.rotate = [0, 0, 0];        // rotate pos in world coordinates
+}
+
+Light.prototype.transform = function(camEye)
+{
+    var rx = rotateX(this.rotate[0]);
+    var ry = rotateY(this.rotate[1]);
+    var rz = rotateZ(this.rotate[2]);
+    var r = mult(rz, mult(ry, rx));
+    // get light position relative to camera position
+    var lpos = mult(translate(negate(camEye)), r);     
+    return lpos;
 }
 
 var lights = [];
@@ -432,18 +444,29 @@ window.onload = function init()
     light.ambient  = vec4(0.1, 0.1, 0.1, 1.0);
     light.diffuse  = vec4(1.0, 1.0, 1.0, 1.0);
     light.specular = vec4(1.0, 1.0, 1.0, 1.0);
-    light.pos = vec4(-20000.0, 5000.0, -20000.0, 1.0);
-    light.animate = rotateY(0.3);
+    light.pos = vec4(0.0, 1000.0, -2000.0, 1.0);
     lights.push(light);
     light = new Light();
     light.ambient  = vec4(0.1, 0.1, 0.1, 1.0);
     light.diffuse  = vec4(1.0, 1.0, 1.0, 1.0);
     light.specular = vec4(1.0, 1.0, 1.0, 1.0);
-    light.pos = vec4(1000.0, 40000.0, 0.0, 1.0);
-    light.animate = mult(rotateY(-0.02), rotateX(0.2));
+    light.pos = vec4(1000.0, 8000.0, 0.0, 1.0);
     lights.push(light);
 
     // test objects
+    
+    /*
+    create_new_obj('sphere');
+    currObj.color =  [0.7, 0.7, 0.7, 1];
+    currObj.scale = [10000000, 1, 1000000];
+    currObj.rotate = [0, 0, 0];
+    currObj.translate = [0, 0, 0];
+    //currObj.ambient  = vec4(0.3, 0.3, 0.3, 1.0);
+    currObj.diffuse  = vec4(0.7, 0.7, 0.7, 1.0);
+    //currObj.specular = vec4(0.2, 0.2, 0.2, 1.0);
+    currObj.shininess = 5.0;
+    cur_obj_set_controls();
+    */
     
     create_new_obj('cube');
     currObj.color =  [0.8, 0.3, 0.2, 1];
@@ -458,23 +481,23 @@ window.onload = function init()
     
     create_new_obj('sphere');
     currObj.color = [0.1, 0.8, 1.0, 1];
-    currObj.scale = [70, 70, 70];
-    currObj.translate = [500, 750, 0];
+    currObj.scale = [200, 200, 200];
+    currObj.translate = [0, 500, 0];
     // currObj.ambient  = vec4(0.3, 0.3, 0.3, 1.0);
     currObj.diffuse  = vec4(0.1, 0.8, 1.0, 1.0);
     //currObj.specular = vec4(0.3, 0.7, 0.8, 1.0);
-    currObj.shininess = 140;
+    currObj.shininess = 150;
     cur_obj_set_controls();
 
     create_new_obj('cone');
     currObj.color = [0.5, 0.8, 0.2, 1];
-    currObj.scale = [60, 180, 60];
+    currObj.scale = [100, 100, 100];
     currObj.rotate = [-65, 20, 50];
     currObj.translate = [500, 250, 0];
     // currObj.ambient  = vec4(0.3, 0.3, 0.3, 1.0);
     currObj.diffuse  = vec4(0.5, 0.8, 0.2, 1.0);
     //currObj.specular = vec4(0.3, 0.7, 0.8, 1.0);
-    currObj.shininess = 140;
+    currObj.shininess = 50;
     cur_obj_set_controls();
     
     create_new_obj('cylinder');
@@ -485,7 +508,7 @@ window.onload = function init()
     // currObj.ambient  = vec4(0.3, 0.3, 0.3, 1.0);
     currObj.diffuse  = vec4(0.5, 0.1, 0.8, 1.0);
     //currObj.specular = vec4(0.3, 0.7, 0.8, 1.0);
-    currObj.shininess = 140;
+    currObj.shininess = 75;
     cur_obj_set_controls();
     
 
@@ -599,7 +622,7 @@ function cur_obj_set_controls()
     var c2 = ('00' + col[2].toString(16)).slice(-2);
     document.getElementById("obj-color").value = "#" + c0 + c1 + c2;
     
-    clip_to_range(currObj.scale, scaleMin, scaleMax);
+    //clip_to_range(currObj.scale, scaleMin, scaleMax);
     clip_to_range(currObj.rotate, rotateMin, rotateMax);
     clip_to_range(currObj.translate, posMin, posMax);
     document.getElementById('range-scale-x').value = document.getElementById('scale-x').innerHTML = currObj.scale[0];
@@ -720,12 +743,15 @@ function render()
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
     if (document.getElementById('radio-proj-perspective').checked) {
-        var pr = perspective(90, 2, 1, 4000);
+        var pr = perspective(90, 2, 1, 10000);
     } else {
         var pr = ortho(-2000, 2000, -1000, 1000, -2000, 2000);
     }
 
     gl.uniformMatrix4fv(prMatrixLoc, gl.FALSE, flatten(pr));
+    
+    lights[0].rotate[1] += 1.0;
+    lights[1].rotate[0] += 0.5;
 
     // iterate over all objects, do model-view transformation
     for (var i = 0; i < objs.length; ++i) {
@@ -734,16 +760,17 @@ function render()
         var specularPr = [];
         var lightPos   = [];
         for (var j = 0; j < lights.length; ++j) {
-            lights[j].pos = vec4(
-                    dot(lights[j].animate[0], lights[j].pos),
-                    dot(lights[j].animate[1], lights[j].pos),
-                    dot(lights[j].animate[2], lights[j].pos),
-                    dot(lights[j].animate[3], lights[j].pos));
+            var lmv = lights[j].transform(camEye);
+            var lightPosVec = vec4(
+                    dot(lmv[0], lights[j].pos),
+                    dot(lmv[1], lights[j].pos),
+                    dot(lmv[2], lights[j].pos),
+                    dot(lmv[3], lights[j].pos));
 
             ambientPr = ambientPr.concat(mult(lights[j].ambient, objs[i].ambient));
             diffusePr = diffusePr.concat(mult(lights[j].diffuse, objs[i].diffuse));
             specularPr = specularPr.concat(mult(lights[j].specular, objs[i].specular));
-            lightPos = lightPos.concat(lights[j].pos);
+            lightPos = lightPos.concat(lightPosVec);
         }
         gl.uniform4fv(ambientPrLoc, flatten(ambientPr));
         gl.uniform4fv(diffusePrLoc, flatten(diffusePr));
