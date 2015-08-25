@@ -135,7 +135,7 @@ function CADObject(name, mesh, color)
     // lighting material properties
     this.ambient  = vec4(0.25, 0.25, 0.25, 1.0);
     this.diffuse  = vec4(0.0, 0.5, 1.0, 1.0);
-    this.specular = vec4(0.0, 0.2, 0.5, 1.0);
+    this.specular = vec4(0.5, 0.5, 0.5, 1.0);
     this.shininess = 15.0;
 
     // object in world space
@@ -444,7 +444,7 @@ window.onload = function init()
     light.ambient  = vec4(0.1, 0.1, 0.1, 1.0);
     light.diffuse  = vec4(1.0, 1.0, 1.0, 1.0);
     light.specular = vec4(1.0, 1.0, 1.0, 1.0);
-    light.pos = vec4(0.0, 1000.0, -2000.0, 1.0);
+    light.pos = vec4(0.0, 1000.0, 5000.0, 1.0);
     lights.push(light);
     light = new Light();
     light.ambient  = vec4(0.1, 0.1, 0.1, 1.0);
@@ -471,12 +471,12 @@ window.onload = function init()
     create_new_obj('cube');
     currObj.color =  [0.8, 0.3, 0.2, 1];
     currObj.scale = [60, 50, 50];
-    currObj.rotate = [100, 40, 0];
+    currObj.rotate = [140, 40, 0];
     currObj.translate = [-500, 750, 0];
     //currObj.ambient  = vec4(0.3, 0.3, 0.3, 1.0);
     currObj.diffuse  = vec4(0.8, 0.3, 0.2, 1.0);
-    //currObj.specular = vec4(0.2, 0.2, 0.2, 1.0);
-    currObj.shininess = 20.0;
+    currObj.specular = vec4(0.3, 0.3, 0.3, 1.0);
+    currObj.shininess = 25;
     cur_obj_set_controls();
     
     create_new_obj('sphere');
@@ -485,8 +485,8 @@ window.onload = function init()
     currObj.translate = [0, 500, 0];
     // currObj.ambient  = vec4(0.3, 0.3, 0.3, 1.0);
     currObj.diffuse  = vec4(0.1, 0.8, 1.0, 1.0);
-    //currObj.specular = vec4(0.3, 0.7, 0.8, 1.0);
-    currObj.shininess = 150;
+    currObj.specular = vec4(0.8, 0.8, 0.8, 1.0);
+    currObj.shininess = 140;
     cur_obj_set_controls();
 
     create_new_obj('cone');
@@ -582,7 +582,7 @@ function reset_scene()
     var sel_obj = document.getElementById('sel-obj');
     sel_obj.innerHTML = '';
 
-    camEye = [0, 600, 280];
+    camEye = [0, 600, 550];
     camAt  = [0, 500, 0];
     cam_set();
     //render();
@@ -752,6 +752,7 @@ function render()
     
     lights[0].rotate[1] += 1.0;
     lights[1].rotate[0] += 0.5;
+    lights[1].rotate[2] += 0.1;
 
     // iterate over all objects, do model-view transformation
     for (var i = 0; i < objs.length; ++i) {
@@ -760,7 +761,7 @@ function render()
         var specularPr = [];
         var lightPos   = [];
         for (var j = 0; j < lights.length; ++j) {
-            var lmv = lights[j].transform(camEye);
+            var lmv = transpose(lights[j].transform(camEye));
             var lightPosVec = vec4(
                     dot(lmv[0], lights[j].pos),
                     dot(lmv[1], lights[j].pos),
@@ -784,7 +785,7 @@ function render()
 
     // testing
     if (animate) {
-        //requestAnimFrame(render);
+        requestAnimFrame(render);
     }
 }
 
