@@ -444,7 +444,7 @@ window.onload = function init()
     light.ambient  = vec4(0.1, 0.1, 0.1, 1.0);
     light.diffuse  = vec4(1.0, 1.0, 1.0, 1.0);
     light.specular = vec4(1.0, 1.0, 1.0, 1.0);
-    light.pos = vec4(0.0, 1000.0, 5000.0, 1.0);
+    light.pos = vec4(0.0, 300.0, 1500.0, 1.0);
     lights.push(light);
     light = new Light();
     light.ambient  = vec4(0.1, 0.1, 0.1, 1.0);
@@ -747,7 +747,9 @@ function render()
     } else {
         var pr = ortho(-2000, 2000, -1000, 1000, -2000, 2000);
     }
-
+    
+    var cb_light = [document.getElementById('cb-light1'),
+        document.getElementById('cb-light2')];
     gl.uniformMatrix4fv(prMatrixLoc, gl.FALSE, flatten(pr));
     
     lights[0].rotate[1] += 1.0;
@@ -769,8 +771,13 @@ function render()
                     dot(lmv[3], lights[j].pos));
 
             ambientPr = ambientPr.concat(mult(lights[j].ambient, objs[i].ambient));
-            diffusePr = diffusePr.concat(mult(lights[j].diffuse, objs[i].diffuse));
-            specularPr = specularPr.concat(mult(lights[j].specular, objs[i].specular));
+            if (cb_light[j].checked) {
+                diffusePr = diffusePr.concat(mult(lights[j].diffuse, objs[i].diffuse));
+                specularPr = specularPr.concat(mult(lights[j].specular, objs[i].specular));
+            } else {
+                diffusePr = diffusePr.concat([0.0, 0.0, 0.0, 1.0]);
+                specularPr = specularPr.concat([0.0, 0.0, 0.0, 1.0]);
+            }
             lightPos = lightPos.concat(lightPosVec);
         }
         gl.uniform4fv(ambientPrLoc, flatten(ambientPr));

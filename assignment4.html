@@ -66,6 +66,7 @@ void main()
 attribute vec4 vPosition;
 attribute vec3 vNormal;
 varying vec3 N, L[2], E;
+varying float d[2];
 uniform mat4 mvMatrix;
 uniform mat4 prMatrix;
 uniform vec4 lightPosition[2];
@@ -81,6 +82,7 @@ void main()
     for (int i = 0; i < 2; i++) {
         vec3 light = (lightPosition[i]).xyz;
          L[i] = normalize(light - pos);
+         d[i] = distance(light, pos);
     }
 
     gl_Position = prMatrix * mvMatrix * vPosition;
@@ -94,6 +96,7 @@ precision mediump float;
 uniform vec4 ambientProduct[2], diffuseProduct[2], specularProduct[2];
 uniform float shininess;
 varying vec3 N, L[2], E;
+varying float d[2];
 
 void main()
 {
@@ -105,9 +108,10 @@ void main()
         // Compute terms in the illumination equation
         vec4 ambient = ambientProduct[i];
         float Kd = max(dot(L[i], N), 0.0);
-        vec4 diffuse = Kd * diffuseProduct[i];
+        float dist = 1.0/ (1.0 + 1e-4 * d[i] + 1e-9 * (d[i] * d[i]));
+        vec4 diffuse = Kd * diffuseProduct[i] * dist;
         float Ks = pow(max(dot(N, H), 0.0), shininess);
-        vec4 specular = Ks * specularProduct[i];
+        vec4 specular = Ks * specularProduct[i] * dist;
         if (dot(L[i], N) < 0.0) {
             specular = vec4(0.0, 0.0, 0.0, 1.0);
         }
@@ -216,6 +220,14 @@ void main()
                 <td id="td-radio-proj">
                     <input id="radio-proj-perspective" type="radio" name="proj" value="perspective">perspective
                     <input id="radio-proj-ortho" type="radio" name="proj" value="ortho">ortho
+                </td>
+            </tr>
+            <tr>
+                <td>Lights</td>
+                <td>
+                    <input id="cb-distance" type="checkbox" checked>Distance
+                    <input id="cb-light1"   type="checkbox" checked>Light1
+                    <input id="cb-light2"   type="checkbox" checked>Light2
                 </td>
             </tr>
             <tr>
