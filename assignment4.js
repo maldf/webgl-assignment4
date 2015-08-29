@@ -27,6 +27,7 @@ var prMatrixLoc;
 var ambientPrLoc, diffusePrLoc, specularPrLoc;
 var lightPosLoc;
 var shininessLoc;
+var calcDistanceLoc;
 
 var lineColor = [0, 0, 0, 1];
 var camEye = [0, 600, 750];
@@ -50,6 +51,7 @@ function Light()
     this.diffuse  = vec4(1.0, 1.0, 1.0, 1.0);
     this.specular = vec4(1.0, 1.0, 1.0, 1.0);
     this.pos = [1000.0, 0.0, 0.0];
+    this.scale = [1, 1, 1];
     this.rotate = [0, 0, 0];        // rotate pos in world coordinates
 }
 
@@ -59,8 +61,9 @@ Light.prototype.transform = function(camEye)
     var ry = rotateY(this.rotate[1]);
     var rz = rotateZ(this.rotate[2]);
     var r = mult(rz, mult(ry, rx));
+    var w = mult(r, scalem(this.scale));
     // get light position relative to camera position
-    var lpos = mult(translate(negate(camEye)), r);     
+    var lpos = mult(translate(negate(camEye)), w);     
     return lpos;
 }
 
@@ -126,11 +129,10 @@ Mesh.prototype.addTopology = function(t)
 }
 
 //-------------------------------------------------------------------------------------------------
-function CADObject(name, mesh, color)
+function CADObject(name, mesh)
 {
     this.name = name;
     this.mesh = mesh;
-    this.color = color;
 
     // lighting material properties
     this.ambient  = vec4(0.25, 0.25, 0.25, 1.0);
@@ -392,6 +394,7 @@ window.onload = function init()
     specularPrLoc = gl.getUniformLocation(program, 'specularProduct');
     lightPosLoc = gl.getUniformLocation(program, 'lightPosition');
     shininessLoc = gl.getUniformLocation(program, 'shininess');
+    calcDistanceLoc = gl.getUniformLocation(program, 'calcDistance');
     
     // Create meshes
     meshes['cube']     = new Cylinder(90);
@@ -440,39 +443,28 @@ window.onload = function init()
     
     reset_scene();
     
+    // lights
     var light = new Light();
     light.ambient  = vec4(0.1, 0.1, 0.1, 1.0);
     light.diffuse  = vec4(1.0, 1.0, 1.0, 1.0);
     light.specular = vec4(1.0, 1.0, 1.0, 1.0);
     light.pos = vec4(0.0, 300.0, 1500.0, 1.0);
+    light.scale = [0.4, 1.0, 0.6];
     lights.push(light);
+
     light = new Light();
     light.ambient  = vec4(0.1, 0.1, 0.1, 1.0);
     light.diffuse  = vec4(1.0, 1.0, 1.0, 1.0);
     light.specular = vec4(1.0, 1.0, 1.0, 1.0);
     light.pos = vec4(1000.0, 8000.0, 0.0, 1.0);
+    light.scale = [1.0, 0.5, 2.0];
     lights.push(light);
 
-    // test objects
-    
-    /*
-    create_new_obj('sphere');
-    currObj.color =  [0.7, 0.7, 0.7, 1];
-    currObj.scale = [10000000, 1, 1000000];
-    currObj.rotate = [0, 0, 0];
-    currObj.translate = [0, 0, 0];
-    //currObj.ambient  = vec4(0.3, 0.3, 0.3, 1.0);
-    currObj.diffuse  = vec4(0.7, 0.7, 0.7, 1.0);
-    //currObj.specular = vec4(0.2, 0.2, 0.2, 1.0);
-    currObj.shininess = 5.0;
-    cur_obj_set_controls();
-    */
-    
+    // default objects on canvas
     create_new_obj('cube');
-    currObj.color =  [0.8, 0.3, 0.2, 1];
-    currObj.scale = [60, 50, 50];
-    currObj.rotate = [140, 40, 0];
-    currObj.translate = [-500, 750, 0];
+    currObj.scale = [120, 100, 105];
+    currObj.rotate = [150, 40, -15];
+    currObj.translate = [310, 670, 100];
     //currObj.ambient  = vec4(0.3, 0.3, 0.3, 1.0);
     currObj.diffuse  = vec4(0.8, 0.3, 0.2, 1.0);
     currObj.specular = vec4(0.3, 0.3, 0.3, 1.0);
@@ -480,20 +472,18 @@ window.onload = function init()
     cur_obj_set_controls();
     
     create_new_obj('sphere');
-    currObj.color = [0.1, 0.8, 1.0, 1];
-    currObj.scale = [200, 200, 200];
-    currObj.translate = [0, 500, 0];
+    currObj.scale = [160, 160, 160];
+    currObj.translate = [-180, 610, 100];
     // currObj.ambient  = vec4(0.3, 0.3, 0.3, 1.0);
-    currObj.diffuse  = vec4(0.1, 0.8, 1.0, 1.0);
+    currObj.diffuse  = vec4(0.1, 0.7, 1.0, 1.0);
     currObj.specular = vec4(0.8, 0.8, 0.8, 1.0);
     currObj.shininess = 140;
     cur_obj_set_controls();
 
     create_new_obj('cone');
-    currObj.color = [0.5, 0.8, 0.2, 1];
-    currObj.scale = [100, 100, 100];
-    currObj.rotate = [-65, 20, 50];
-    currObj.translate = [500, 250, 0];
+    currObj.scale = [170, 200, 170];
+    currObj.rotate = [-75, 0, 35];
+    currObj.translate = [680, 120, -300];
     // currObj.ambient  = vec4(0.3, 0.3, 0.3, 1.0);
     currObj.diffuse  = vec4(0.5, 0.8, 0.2, 1.0);
     //currObj.specular = vec4(0.3, 0.7, 0.8, 1.0);
@@ -501,16 +491,14 @@ window.onload = function init()
     cur_obj_set_controls();
     
     create_new_obj('cylinder');
-    currObj.color = [0.5, 0.1, 0.8, 1];
-    currObj.scale = [60, 180, 60];
-    currObj.rotate = [-65, 20, 50];
-    currObj.translate = [-500, 250, 0];
+    currObj.scale = [70, 200, 70];
+    currObj.rotate = [-65, 85, 50];
+    currObj.translate = [-410, 100, 10];
     // currObj.ambient  = vec4(0.3, 0.3, 0.3, 1.0);
     currObj.diffuse  = vec4(0.5, 0.1, 0.8, 1.0);
-    //currObj.specular = vec4(0.3, 0.7, 0.8, 1.0);
+    currObj.specular = vec4(0.7, 0.7, 0.7, 1.0);
     currObj.shininess = 75;
     cur_obj_set_controls();
-    
 
     animate = true;
     render();
@@ -529,9 +517,9 @@ function create_new_obj(objType)
     sel_obj.appendChild(opt);
     sel_obj.value = opt.value;
 
-    objs.push(new CADObject(name, meshes[type], [0.8, 0.8, 0.8, 1]));
+    objs.push(new CADObject(name, meshes[type]));
     currObj = objs[objs.length - 1];
-    currObj.color = convert_string_to_rgb(document.getElementById("obj-color").value);
+    currObj.diffuse = convert_string_to_rgb(document.getElementById("obj-color").value);
     currObj.scale = [50, 50, 50];
     currObj.translate = camAt.slice();
     cur_obj_set_controls();
@@ -613,7 +601,7 @@ function cur_obj_set_controls()
         return;
     }
     
-    var col = currObj.color.slice();
+    var col = currObj.diffuse.slice();
     col[0] = Math.floor(col[0] * 255);
     col[1] = Math.floor(col[1] * 255);
     col[2] = Math.floor(col[2] * 255);
@@ -640,7 +628,7 @@ function cur_obj_set_controls()
 function cur_obj_change()
 {
     if (currObj) {
-        currObj.color = convert_string_to_rgb(document.getElementById("obj-color").value);
+        currObj.diffuse = convert_string_to_rgb(document.getElementById("obj-color").value);
 
         var scale_x = document.getElementById('range-scale-x').value;
         var scale_y = document.getElementById('range-scale-y').value;
@@ -747,12 +735,17 @@ function render()
     } else {
         var pr = ortho(-2000, 2000, -1000, 1000, -2000, 2000);
     }
+    gl.uniformMatrix4fv(prMatrixLoc, gl.FALSE, flatten(pr));
     
     var cb_light = [document.getElementById('cb-light1'),
         document.getElementById('cb-light2')];
-    gl.uniformMatrix4fv(prMatrixLoc, gl.FALSE, flatten(pr));
+    var calcDistance = document.getElementById('cb-distance').checked;
     
+    // light 
+    lights[0].rotate[0] += 0.1;
     lights[0].rotate[1] += 1.0;
+    lights[0].rotate[2] += 0.1;
+    
     lights[1].rotate[0] += 0.5;
     lights[1].rotate[2] += 0.1;
 
@@ -785,6 +778,7 @@ function render()
         gl.uniform4fv(specularPrLoc, flatten(specularPr));
         gl.uniform4fv(lightPosLoc, flatten(lightPos));
         gl.uniform1f(shininessLoc, objs[i].shininess);
+        gl.uniform1i(calcDistanceLoc, calcDistance);
 
         objs[i].transform(cam); 
         objs[i].mesh.draw();

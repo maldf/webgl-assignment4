@@ -81,8 +81,8 @@ void main()
     
     for (int i = 0; i < 2; i++) {
         vec3 light = (lightPosition[i]).xyz;
-         L[i] = normalize(light - pos);
-         d[i] = distance(light, pos);
+        L[i] = normalize(light - pos);
+        d[i] = distance(light, pos);
     }
 
     gl_Position = prMatrix * mvMatrix * vPosition;
@@ -97,6 +97,7 @@ uniform vec4 ambientProduct[2], diffuseProduct[2], specularProduct[2];
 uniform float shininess;
 varying vec3 N, L[2], E;
 varying float d[2];
+uniform bool calcDistance;
 
 void main()
 {
@@ -108,7 +109,12 @@ void main()
         // Compute terms in the illumination equation
         vec4 ambient = ambientProduct[i];
         float Kd = max(dot(L[i], N), 0.0);
-        float dist = 1.0/ (1.0 + 1e-4 * d[i] + 1e-9 * (d[i] * d[i]));
+        float dist;
+        if (calcDistance) {
+            dist = 1.0 / (1.0 + 1e-4 * d[i] + 1e-9 * (d[i] * d[i]));
+        } else {
+            dist = 1.0;
+        }
         vec4 diffuse = Kd * diffuseProduct[i] * dist;
         float Ks = pow(max(dot(N, H), 0.0), shininess);
         vec4 specular = Ks * specularProduct[i] * dist;
@@ -265,10 +271,8 @@ void main()
         
     </div>
 
-    <!--
     <div id="footer">
         Tested with Firefox and Chrome.<span id="status"></span>
     </div>
-    -->
 </body>
 </html>
