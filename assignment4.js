@@ -456,7 +456,7 @@ window.onload = function init()
     light.ambient  = vec4(0.1, 0.1, 0.1, 1.0);
     light.diffuse  = vec4(1.0, 1.0, 1.0, 1.0);
     light.specular = vec4(1.0, 1.0, 1.0, 1.0);
-    light.pos = vec4(1000.0, 8000.0, 0.0, 1.0);
+    light.pos = vec4(1000.0, -8000.0, 0.0, 1.0);
     light.scale = [1.0, 0.5, 2.0];
     lights.push(light);
 
