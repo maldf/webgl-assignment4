@@ -1,2 +1,2 @@
-# WebGL assignment3: Geometric CAD
+# WebGL assignment4: Adding Lighting
 Tested with Firefox and Chrome on Linux.
